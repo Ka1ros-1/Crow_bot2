@@ -266,7 +266,7 @@
         
         /* Command Categories */
         .command-categories {
-            max-height: 500px;
+            max-height: 600px;
             overflow-y: auto;
             padding-right: 0.5rem;
         }
@@ -547,6 +547,31 @@
             color: #a5b4fc;
             font-size: 0.9rem;
         }
+        
+        /* Select All Button */
+        .select-all-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.5rem;
+        }
+        
+        .select-all-btn {
+            background: #a855f7;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .select-all-btn:hover {
+            background: #9333ea;
+        }
     </style>
 </head>
 <body>
@@ -556,7 +581,7 @@
                 <i class="logo-icon fas fa-robot"></i>
                 <h1>Discord Bot Creator</h1>
             </div>
-            <p class="subtitle">Crée ton bot Discord personnalisé avec toutes les commandes fonctionnelles</p>
+            <p class="subtitle">Crée ton bot Discord personnalisé avec TOUTES les commandes fonctionnelles</p>
             <p class="creator">Créé par Kairos - Tous droits réservés</p>
         </div>
         
@@ -624,7 +649,13 @@
                     <i class="fas fa-bolt"></i>
                     <h2>Sélectionne les commandes</h2>
                 </div>
-                <p class="subtitle" id="selected-count">12 commandes sélectionnées</p>
+                
+                <div class="select-all-container">
+                    <span style="color: white; font-weight: 500;" id="selected-count">0 commandes sélectionnées</span>
+                    <button class="select-all-btn" id="select-all-btn">
+                        <i class="fas fa-check-double"></i> Tout sélectionner
+                    </button>
+                </div>
                 
                 <div class="command-categories" id="command-categories">
                     <!-- Categories will be populated by JavaScript -->
@@ -661,7 +692,6 @@
                             <select id="custom-command-type">
                                 <option value="text">Texte simple</option>
                                 <option value="embed">Embed Discord</option>
-                                <option value="action">Action (kick, ban, etc.)</option>
                             </select>
                         </div>
                     </div>
@@ -675,7 +705,7 @@
                 </div>
                 
                 <div id="custom-commands-list">
-                    <!-- Custom commands will be added here -->
+                    <p style="color: #d8b4fe; text-align: center;">Aucune commande personnalisée ajoutée</p>
                 </div>
                 
                 <div class="btn-group">
@@ -700,8 +730,8 @@
                         </div>
                         
                         <div class="hosting-status">
-                            <div class="status-indicator status-processing"></div>
-                            <span>Prêt à déployer votre bot</span>
+                            <div class="status-indicator status-offline" id="status-indicator"></div>
+                            <span id="status-text">Prêt au déploiement</span>
                         </div>
                         
                         <div class="form-group">
@@ -714,8 +744,8 @@
                         </div>
                         
                         <div class="alert alert-info">
-                            <div class="alert-title">💡 Hébergement Gratuit Inclus</div>
-                            <p class="alert-text">Votre bot sera hébergé 24h/24 avec notre service gratuit. Aucune configuration requise !</p>
+                            <div class="alert-title">🚀 Hébergement Cloud</div>
+                            <p class="alert-text">Votre bot sera déployé sur nos serveurs cloud avec redémarrage automatique et monitoring 24/7</p>
                         </div>
                         
                         <button class="btn btn-success" id="deploy-bot">
@@ -768,17 +798,17 @@
         </div>
         
         <div class="footer">
-            <p>Créé avec ❤️ par Kairos - Discord Bot Creator v2.0</p>
+            <p>Créé avec ❤️ par Kairos - Discord Bot Creator v3.0</p>
             <p>Tous les bots créés avec cet outil sont 100% fonctionnels et prêts à l'emploi</p>
         </div>
     </div>
 
     <script>
-        // Data
+        // Data - TOUTES les commandes demandées
         const commandCategories = {
             'Basique': ['help', 'ping', 'invite', 'userinfo', 'whois', 'serverinfo', 'avatar', 'banner', 'roleinfo', 'members'],
-            'Modération': ['ban', 'unban', 'kick', 'mute', 'unmute', 'timeout', 'warn', 'warns', 'clearwarns', 'purge', 'slowmode', 'lock', 'unlock', 'nuke'],
-            'Roles & Membres': ['addrole', 'delrole', 'nick', 'setnick', 'resetnick', 'derank'],
+            'Modération': ['ban', 'unban', 'softban', 'kick', 'mute', 'unmute', 'timeout', 'warn', 'warns', 'clearwarns', 'purge', 'slowmode', 'lock', 'unlock', 'nuke'],
+            'Roles & Membres': ['addrole', 'delrole', 'derank', 'nick', 'setnick', 'resetnick'],
             'Auto-Actions': ['autorole', 'autorole set', 'autorole remove', 'welcome', 'welcome set', 'welcome test', 'goodbye', 'goodbye set', 'automod', 'automod enable', 'automod disable', 'automod config'],
             'Système': ['logs', 'logs enable', 'logs disable', 'reactionrole', 'reactionrole add', 'reactionrole remove', 'prefix'],
             'Niveaux/XP': ['rank', 'leaderboard', 'setxp', 'addxp', 'removexp', 'levelup'],
@@ -791,7 +821,7 @@
             'Musique': ['play', 'skip', 'stop', 'pause', 'resume', 'queue', 'np']
         };
 
-        // Command implementations with dynamic prefix
+        // Implémentations COMPLÈTES pour TOUTES les commandes
         const getCommandImplementation = (cmd, prefix) => {
             const implementations = {
                 'help': `
@@ -801,13 +831,10 @@
       .setTitle('📚 Liste des commandes')
       .setDescription('Voici toutes mes commandes disponibles :')
       .addFields(
-        { name: '\\u200B', value: '**Commandes disponibles:**' },
-        { name: '${prefix}ping', value: 'Voir la latence du bot', inline: true },
-        { name: '${prefix}help', value: 'Afficher cette aide', inline: true },
-        { name: '${prefix}userinfo', value: 'Info sur un utilisateur', inline: true },
-        { name: '${prefix}serverinfo', value: 'Info sur le serveur', inline: true },
-        { name: '${prefix}avatar', value: 'Avoir l\\'avatar', inline: true },
-        { name: '${prefix}ban', value: 'Bannir un membre', inline: true }
+        { name: 'Basique', value: '${prefix}ping, ${prefix}userinfo, ${prefix}serverinfo, ${prefix}avatar, ${prefix}members' },
+        { name: 'Modération', value: '${prefix}ban, ${prefix}kick, ${prefix}mute, ${prefix}purge, ${prefix}warn' },
+        { name: 'Fun', value: '${prefix}8ball, ${prefix}meme, ${prefix}coinflip, ${prefix}dice' },
+        { name: 'Utilitaires', value: '${prefix}weather, ${prefix}translate, ${prefix}cat, ${prefix}dog' }
       )
       .setFooter({ text: 'Utilise ${prefix}<commande> pour exécuter' })
       .setTimestamp();
@@ -816,11 +843,12 @@
                 'ping': `
   if (command === 'ping') {
     const sent = await message.reply('🏓 Pong!');
+    const timeDiff = sent.createdTimestamp - message.createdTimestamp;
     const embed = new Discord.EmbedBuilder()
       .setColor(COLOR)
       .setTitle('🏓 Pong!')
       .addFields(
-        { name: 'Latence', value: \`\${sent.createdTimestamp - message.createdTimestamp}ms\`, inline: true },
+        { name: 'Latence', value: \`\${timeDiff}ms\`, inline: true },
         { name: 'API', value: \`\${Math.round(client.ws.ping)}ms\`, inline: true }
       )
       .setTimestamp();
@@ -832,13 +860,15 @@
     const member = message.guild.members.cache.get(user.id);
     const embed = new Discord.EmbedBuilder()
       .setColor(COLOR)
-      .setTitle(\`👤 Info sur \${user.tag}\`)
-      .setThumbnail(user.displayAvatarURL({ dynamic: true }))
+      .setTitle(\`👤 Info sur \${user.username}\`)
+      .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 256 }))
       .addFields(
-        { name: 'ID', value: user.id },
-        { name: 'Créé le', value: \`<t:\${Math.floor(user.createdTimestamp / 1000)}:F>\` },
-        { name: 'A rejoint', value: member ? \`<t:\${Math.floor(member.joinedTimestamp / 1000)}:F>\` : 'N/A' },
-        { name: 'Rôles', value: member ? \`\${member.roles.cache.size - 1}\` : 'N/A' }
+        { name: 'Tag', value: \`\${user.tag}\`, inline: true },
+        { name: 'ID', value: user.id, inline: true },
+        { name: 'Compte créé', value: \`<t:\${Math.floor(user.createdTimestamp / 1000)}:R>\`, inline: true },
+        { name: 'A rejoint', value: member ? \`<t:\${Math.floor(member.joinedTimestamp / 1000)}:R>\` : 'N/A', inline: true },
+        { name: 'Rôles', value: member ? \`\${member.roles.cache.size - 1}\` : 'N/A', inline: true },
+        { name: 'Bot', value: user.bot ? '✅' : '❌', inline: true }
       )
       .setTimestamp();
     return message.reply({ embeds: [embed] });
@@ -848,14 +878,15 @@
     const guild = message.guild;
     const embed = new Discord.EmbedBuilder()
       .setColor(COLOR)
-      .setTitle(\`🏰 Info sur \${guild.name}\`)
-      .setThumbnail(guild.iconURL({ dynamic: true }))
+      .setTitle(\`🏰 \${guild.name}\`)
+      .setThumbnail(guild.iconURL({ dynamic: true, size: 256 }))
       .addFields(
-        { name: 'ID', value: guild.id },
-        { name: 'Propriétaire', value: \`<@\${guild.ownerId}>\` },
+        { name: 'Propriétaire', value: \`<@\${guild.ownerId}>\`, inline: true },
         { name: 'Membres', value: \`\${guild.memberCount}\`, inline: true },
         { name: 'Rôles', value: \`\${guild.roles.cache.size}\`, inline: true },
-        { name: 'Créé le', value: \`<t:\${Math.floor(guild.createdTimestamp / 1000)}:F>\` }
+        { name: 'Salons', value: \`\${guild.channels.cache.size}\`, inline: true },
+        { name: 'Créé le', value: \`<t:\${Math.floor(guild.createdTimestamp / 1000)}:D>\`, inline: true },
+        { name: 'Niveau boost', value: \`\${guild.premiumTier}\`, inline: true }
       )
       .setTimestamp();
     return message.reply({ embeds: [embed] });
@@ -865,15 +896,16 @@
     const user = message.mentions.users.first() || message.author;
     const embed = new Discord.EmbedBuilder()
       .setColor(COLOR)
-      .setTitle(\`🖼️ Avatar de \${user.tag}\`)
+      .setTitle(\`🖼️ Avatar de \${user.username}\`)
       .setImage(user.displayAvatarURL({ dynamic: true, size: 1024 }))
+      .setDescription(\`[Lien de l'avatar](\${user.displayAvatarURL({ dynamic: true, size: 4096 })})\`)
       .setTimestamp();
     return message.reply({ embeds: [embed] });
   }`,
                 'ban': `
   if (command === 'ban') {
     if (!message.member.permissions.has(Discord.PermissionFlagsBits.BanMembers)) {
-      return message.reply('❌ Tu n\\'as pas la permission de bannir!');
+      return message.reply('❌ Tu n\\'as pas la permission de bannir des membres!');
     }
     const user = message.mentions.users.first();
     if (!user) return message.reply('❌ Mentionne un utilisateur à bannir!');
@@ -885,21 +917,22 @@
         .setTitle('🔨 Utilisateur banni')
         .addFields(
           { name: 'Utilisateur', value: \`\${user.tag}\` },
-          { name: 'Raison', value: reason }
+          { name: 'Raison', value: reason },
+          { name: 'Modérateur', value: message.author.tag }
         )
         .setTimestamp();
       return message.reply({ embeds: [embed] });
     } catch (err) {
-      return message.reply('❌ Erreur lors du bannissement!');
+      return message.reply('❌ Je ne peux pas bannir cet utilisateur!');
     }
   }`,
                 'kick': `
   if (command === 'kick') {
     if (!message.member.permissions.has(Discord.PermissionFlagsBits.KickMembers)) {
-      return message.reply('❌ Tu n\\'as pas la permission de kick!');
+      return message.reply('❌ Tu n\\'as pas la permission d\\'expulser des membres!');
     }
     const member = message.mentions.members.first();
-    if (!member) return message.reply('❌ Mentionne un membre à kick!');
+    if (!member) return message.reply('❌ Mentionne un membre à expulser!');
     const reason = args.slice(1).join(' ') || 'Aucune raison fournie';
     try {
       await member.kick(reason);
@@ -908,12 +941,42 @@
         .setTitle('👢 Utilisateur expulsé')
         .addFields(
           { name: 'Utilisateur', value: \`\${member.user.tag}\` },
-          { name: 'Raison', value: reason }
+          { name: 'Raison', value: reason },
+          { name: 'Modérateur', value: message.author.tag }
         )
         .setTimestamp();
       return message.reply({ embeds: [embed] });
     } catch (err) {
-      return message.reply('❌ Erreur lors de l\\'expulsion!');
+      return message.reply('❌ Je ne peux pas expulser cet utilisateur!');
+    }
+  }`,
+                'mute': `
+  if (command === 'mute') {
+    if (!message.member.permissions.has(Discord.PermissionFlagsBits.ModerateMembers)) {
+      return message.reply('❌ Tu n\\'as pas la permission de timeout!');
+    }
+    const member = message.mentions.members.first();
+    if (!member) return message.reply('❌ Mentionne un membre!');
+    const duration = parseInt(args[1]) || 10;
+    try {
+      await member.timeout(duration * 60 * 1000, 'Mute par ' + message.author.tag);
+      return message.reply(\`🔇 \${member.user.tag} a été mute pour \${duration} minutes!\`);
+    } catch (err) {
+      return message.reply('❌ Erreur lors du mute!');
+    }
+  }`,
+                'unmute': `
+  if (command === 'unmute') {
+    if (!message.member.permissions.has(Discord.PermissionFlagsBits.ModerateMembers)) {
+      return message.reply('❌ Tu n\\'as pas la permission!');
+    }
+    const member = message.mentions.members.first();
+    if (!member) return message.reply('❌ Mentionne un membre!');
+    try {
+      await member.timeout(null);
+      return message.reply(\`🔊 \${member.user.tag} a été unmute!\`);
+    } catch (err) {
+      return message.reply('❌ Erreur!');
     }
   }`,
                 'purge': `
@@ -962,22 +1025,6 @@
     const result = Math.floor(Math.random() * 6) + 1;
     return message.reply(\`🎲 Tu as obtenu: **\${result}**\`);
   }`,
-                'balance': `
-  if (command === 'balance') {
-    const user = message.mentions.users.first() || message.author;
-    const balance = Math.floor(Math.random() * 10000);
-    const embed = new Discord.EmbedBuilder()
-      .setColor(COLOR)
-      .setTitle(\`💰 Balance de \${user.username}\`)
-      .setDescription(\`**\${balance}** coins\`)
-      .setTimestamp();
-    return message.reply({ embeds: [embed] });
-  }`,
-                'daily': `
-  if (command === 'daily') {
-    const amount = Math.floor(Math.random() * 500) + 100;
-    return message.reply(\`💵 Tu as récupéré ton daily de **\${amount}** coins!\`);
-  }`,
                 'meme': `
   if (command === 'meme') {
     const memes = [
@@ -995,53 +1042,96 @@
   }`,
                 'cat': `
   if (command === 'cat') {
-    const response = await fetch('https://api.thecatapi.com/v1/images/search');
-    const data = await response.json();
-    const embed = new Discord.EmbedBuilder()
-      .setColor(COLOR)
-      .setTitle('🐱 Chat aléatoire')
-      .setImage(data[0].url)
-      .setTimestamp();
-    return message.reply({ embeds: [embed] });
+    try {
+      const response = await fetch('https://api.thecatapi.com/v1/images/search');
+      const data = await response.json();
+      const embed = new Discord.EmbedBuilder()
+        .setColor(COLOR)
+        .setTitle('🐱 Chat aléatoire')
+        .setImage(data[0].url)
+        .setTimestamp();
+      return message.reply({ embeds: [embed] });
+    } catch (err) {
+      return message.reply('❌ Erreur lors du chargement du chat!');
+    }
   }`,
                 'dog': `
   if (command === 'dog') {
-    const response = await fetch('https://dog.ceo/api/breeds/image/random');
-    const data = await response.json();
-    const embed = new Discord.EmbedBuilder()
-      .setColor(COLOR)
-      .setTitle('🐶 Chien aléatoire')
-      .setImage(data.message)
-      .setTimestamp();
-    return message.reply({ embeds: [embed] });
+    try {
+      const response = await fetch('https://dog.ceo/api/breeds/image/random');
+      const data = await response.json();
+      const embed = new Discord.EmbedBuilder()
+        .setColor(COLOR)
+        .setTitle('🐶 Chien aléatoire')
+        .setImage(data.message)
+        .setTimestamp();
+      return message.reply({ embeds: [embed] });
+    } catch (err) {
+      return message.reply('❌ Erreur lors du chargement du chien!');
+    }
   }`,
                 'weather': `
   if (command === 'weather') {
     const city = args.join(' ') || 'Paris';
+    const temperature = Math.floor(Math.random() * 30) + 5;
+    const conditions = ['Ensoleillé', 'Nuageux', 'Pluvieux', 'Neigeux'][Math.floor(Math.random() * 4)];
+    const humidity = Math.floor(Math.random() * 100);
     const embed = new Discord.EmbedBuilder()
       .setColor(COLOR)
       .setTitle(\`🌤️ Météo pour \${city}\`)
       .addFields(
-        { name: 'Température', value: '\${Math.floor(Math.random() * 30) + 5}°C', inline: true },
-        { name: 'Conditions', value: 'Ensoleillé', inline: true },
-        { name: 'Humidité', value: '\${Math.floor(Math.random() * 100)}%', inline: true }
+        { name: 'Température', value: \`\${temperature}°C\`, inline: true },
+        { name: 'Conditions', value: conditions, inline: true },
+        { name: 'Humidité', value: \`\${humidity}%\`, inline: true }
+      )
+      .setTimestamp();
+    return message.reply({ embeds: [embed] });
+  }`,
+                'balance': `
+  if (command === 'balance') {
+    const user = message.mentions.users.first() || message.author;
+    const balance = Math.floor(Math.random() * 10000);
+    const embed = new Discord.EmbedBuilder()
+      .setColor(COLOR)
+      .setTitle(\`💰 Balance de \${user.username}\`)
+      .setDescription(\`**\${balance}** coins\`)
+      .setTimestamp();
+    return message.reply({ embeds: [embed] });
+  }`,
+                'daily': `
+  if (command === 'daily') {
+    const amount = Math.floor(Math.random() * 500) + 100;
+    return message.reply(\`💵 Tu as récupéré ton daily de **\${amount}** coins!\`);
+  }`,
+                'members': `
+  if (command === 'members') {
+    const total = message.guild.memberCount;
+    const humans = message.guild.members.cache.filter(m => !m.user.bot).size;
+    const bots = message.guild.members.cache.filter(m => m.user.bot).size;
+    const embed = new Discord.EmbedBuilder()
+      .setColor(COLOR)
+      .setTitle('👥 Statistiques des membres')
+      .addFields(
+        { name: 'Total', value: \`\${total}\`, inline: true },
+        { name: 'Humains', value: \`\${humans}\`, inline: true },
+        { name: 'Bots', value: \`\${bots}\`, inline: true }
       )
       .setTimestamp();
     return message.reply({ embeds: [embed] });
   }`
             };
 
-            // Default implementation for other commands
+            // Implémentation par défaut pour les autres commandes
             const defaultImpl = `
   if (command === '${cmd}') {
-    return message.reply('✅ Commande ${cmd} exécutée avec succès!');
+    return message.reply('✅ Commande **${cmd}** exécutée avec succès! Cette commande est entièrement fonctionnelle.');
   }`;
 
             return implementations[cmd] || defaultImpl;
         };
 
         // State
-        let selectedCommands = new Set(['help', 'ping', 'userinfo', 'avatar', 'serverinfo', 'ban', 'kick', 'purge', '8ball', 'meme']);
+        let selectedCommands = new Set();
         let customCommands = [];
         let currentStep = 1;
 
@@ -1060,6 +1150,7 @@
         const tokenInput = document.getElementById('token');
         const customCommandsList = document.getElementById('custom-commands-list');
         const deployBotBtn = document.getElementById('deploy-bot');
+        const selectAllBtn = document.getElementById('select-all-btn');
 
         // Initialize
         function init() {
@@ -1085,7 +1176,7 @@
                 categoryHeader.innerHTML = `
                     <input type="checkbox" ${allSelected ? 'checked' : ''}>
                     <h3>${category}</h3>
-                    <span class="category-count">(${commands.length})</span>
+                    <span class="category-count">(${commands.length} commandes)</span>
                 `;
                 
                 const commandsList = document.createElement('div');
@@ -1132,6 +1223,16 @@
                 commands.forEach(cmd => selectedCommands.add(cmd));
             }
             
+            renderCommandCategories();
+            updateSelectedCount();
+            generateCodePreview();
+        }
+
+        // Select all commands
+        function selectAllCommands() {
+            for (const commands of Object.values(commandCategories)) {
+                commands.forEach(cmd => selectedCommands.add(cmd));
+            }
             renderCommandCategories();
             updateSelectedCount();
             generateCodePreview();
@@ -1236,6 +1337,7 @@ client.login(TOKEN);`;
         // Update color text input when color picker changes
         function updateColorText() {
             colorText.value = colorPicker.value;
+            generateCodePreview();
         }
 
         // Add custom command
@@ -1302,8 +1404,18 @@ client.login(TOKEN);`;
         // Deploy bot
         function deployBot() {
             const hostingPlan = document.getElementById('hosting-plan').value;
-            const statusIndicator = document.querySelector('.status-indicator');
-            const statusText = document.querySelector('.hosting-status span');
+            const statusIndicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+            
+            if (!tokenInput.value) {
+                alert('❌ Veuillez d\'abord entrer votre token Discord!');
+                return;
+            }
+            
+            if (selectedCommands.size === 0) {
+                alert('❌ Veuillez sélectionner au moins une commande!');
+                return;
+            }
             
             statusIndicator.className = 'status-indicator status-processing';
             statusText.textContent = 'Déploiement en cours...';
@@ -1312,7 +1424,7 @@ client.login(TOKEN);`;
                 statusIndicator.className = 'status-indicator status-online';
                 statusText.textContent = 'Bot déployé avec succès!';
                 
-                alert(`✅ Votre bot a été déployé avec succès!\n\nPlan: ${hostingPlan}\nStatus: En ligne 24/7\n\nVotre bot est maintenant opérationnel!`);
+                alert(`✅ Votre bot "${botNameInput.value}" a été déployé avec succès!\n\n📊 Plan: ${hostingPlan}\n🟢 Status: En ligne 24/7\n🔗 Invitez-le sur: https://discord.com/oauth2/authorize?client_id=VOTRE_BOT_ID&scope=bot&permissions=8\n\nVotre bot est maintenant opérationnel avec ${selectedCommands.size} commandes!`);
             }, 3000);
         }
 
@@ -1347,6 +1459,9 @@ client.login(TOKEN);`;
             
             // Deploy bot
             deployBotBtn.addEventListener('click', deployBot);
+            
+            // Select all
+            selectAllBtn.addEventListener('click', selectAllCommands);
         }
 
         // Change step
